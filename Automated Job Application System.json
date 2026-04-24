@@ -1,0 +1,607 @@
+{
+  "name": "Multi-Format Documentation Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc19df7-80b3-47a5-b1fe-aa8d8c096f26",
+              "name": "Linkedin Search URL",
+              "value": "https://www.linkedin.com/jobs/search-results/?currentJobId=4398786850&keywords=data%20science%20internship%20posted%20in%20the%20past%20week%20remote&origin=SEMANTIC_SEARCH_LANDING_PAGE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        416
+      ],
+      "id": "7ed68726-f456-4ae1-b6a2-256d8571cf28",
+      "name": "Job Search URL1"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "7Gm7M4WPR3KFcmOvg",
+          "mode": "list",
+          "cachedResultName": "Linkedin Jobs Scraper - Openclaw, MCP native (openclaw/linkedin-jobs-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/7Gm7M4WPR3KFcmOvg/input"
+        },
+        "customBody": "={\n    \"datePosted\": \"r604800\",\n    \"maxItems\": 100,\n    \"proxy\": {\n        \"useApifyProxy\": true,\n        \"apifyProxyGroups\": [\n            \"RESIDENTIAL\"\n        ]\n    },\n    \"scrapeCompany\": true,\n    \"scrapeJobDetails\": true,\n    \"searchLocation\": \"India\",\n    \"splitSearchByLocation\": true,\n    \"startUrls\": [\n        {\n            \"url\": \"{{ $json['Linkedin Search URL'] }}\"\n        }\n    ],\n    \"targetCountry\": \"india\"\n} ",
+        "authentication": "apifyOAuth2Api"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        0,
+        416
+      ],
+      "id": "f9aa513d-0492-4702-97aa-4170e65ad157",
+      "name": "Scrape Jobs1",
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "gK062BmnOYdSNTrI",
+          "name": "Apify OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        176,
+        416
+      ],
+      "id": "d7665308-3b7f-49f2-972f-c4cca266da33",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1Ia3r6m1Pamr4OM2CVyEu5iHtCWu7Az00lIeb1RRjI0s/edit?tab=t.0"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        400,
+        416
+      ],
+      "id": "17b3f0dd-9214-4a40-ac9e-17b7e7657846",
+      "name": "Get Resume1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "RwSXqHz2KpwtVk3v",
+          "name": "Google Docs OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a smart helpful, job filtering assistant."
+            },
+            {
+              "content": "=##Overview\nI'm looking for jobs. Your task is to filter them based on a list of\nattributions and skills that I have. Some jobs may not be relevant, which is\nwhy I want you to go through each one of them and let me know whether or not\nI'm an okay fit.\n\n##Context\n\nBelow is my resume\n{{ $json.content }}\n\n\n##Job description.\n{{ $('Scrape Jobs1').item.json.descriptionText }}\n\nRespond in one word: \"true\" or false\"\n\nIf I'm a fit return true\nIf I'm not a fit return false "
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        416
+      ],
+      "id": "0925888a-2a00-4c08-babf-a5a0508fe8d0",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "U0NXCRPAi3B1Ichy",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "580ee067-0263-4246-a6f0-2e541a25336c",
+              "leftValue": "={{ $json.output[0].content[0].text }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        864,
+        416
+      ],
+      "id": "1b720242-1bcc-47fd-a4f1-dd344a202046",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"document_name\": \"{{$('Scrape Jobs1').item.json.companyName }}\",\n  \"html_content\":\"{{ $('Resume Text generation1').item.json.output[0].content[0].text }}\",\n  \"drive_folder_id\": \"1h7kjtwa22C3r0z4PG9rxHJ2jGLGH5YMt\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        416
+      ],
+      "id": "c5dcc0ac-11c1-44d0-9ec0-772674f1a72f",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const md = $input.first().json.html_content || \"\";\n\n// ---------- CLEAN ----------\nconst clean = (s) => s\n  .replace(/\\*\\*(.*?)\\*\\*/g, '$1')\n  .replace(/\\[(.*?)\\]\\((.*?)\\)/g, '$1')\n  .trim();\n\n// ---------- SPLIT ----------\nconst lines = md.split('\\n').map(l => l.trim()).filter(Boolean);\n\n// ---------- STORAGE ----------\nlet name = '';\nlet contact = '';\n\nconst experience = [];\nconst projects = [];\nconst skills = [];\nconst education = [];\n\nlet section = \"\";\n\n// ---------- PARSE ----------\nfor (let i = 0; i < lines.length; i++) {\n  const l = clean(lines[i]);\n\n  // NAME\n  if (l.startsWith(\"NAME:\")) {\n    name = l.replace(\"NAME:\", \"\").trim();\n    continue;\n  }\n\n  // CONTACT\n  if (l.startsWith(\"CONTACT:\")) {\n    contact = clean(lines[i + 1] || \"\");\n    continue;\n  }\n\n  // SECTION SWITCH\n  if (l.startsWith(\"EXPERIENCE\")) section = \"exp\";\n  else if (l.startsWith(\"PROJECTS\")) section = \"proj\";\n  else if (l.startsWith(\"TECHNICAL_SKILLS\")) section = \"skills\";\n  else if (l.startsWith(\"EDUCATION\")) section = \"edu\";\n\n  // ---------- EXPERIENCE ----------\n  if (section === \"exp\" && l.startsWith(\"- Role:\")) {\n    let role = l.replace(\"- Role:\", \"\").trim();\n    let company = clean(lines[++i]?.replace(\"Company:\", \"\") || \"\");\n    let duration = clean(lines[++i]?.replace(\"Duration:\", \"\") || \"\");\n\n    let bullets = [];\n\n    // skip \"Points:\"\n    if (lines[i + 1]?.includes(\"Points\")) i++;\n\n    while (lines[i + 1] && lines[i + 1].trim().startsWith(\"-\")) {\n      bullets.push(clean(lines[++i].replace(/^-/, '')));\n    }\n\n    experience.push({ role, company, duration, bullets });\n  }\n\n  // ---------- PROJECTS ----------\n  if (section === \"proj\" && l.startsWith(\"- Title:\")) {\n    let title = l.replace(\"- Title:\", \"\").trim();\n    let year = clean(lines[++i]?.replace(\"Year:\", \"\") || \"\");\n\n    let bullets = [];\n\n    // skip \"Points:\"\n    if (lines[i + 1]?.includes(\"Points\")) i++;\n\n    while (lines[i + 1] && lines[i + 1].trim().startsWith(\"-\")) {\n      bullets.push(clean(lines[++i].replace(/^-/, '')));\n    }\n\n    projects.push({ title, year, bullets });\n  }\n\n  // ---------- SKILLS ----------\n  if (section === \"skills\" && l.startsWith(\"-\")) {\n    skills.push(clean(l.replace(/^-/, '')));\n  }\n\n  // ---------- EDUCATION ----------\n  if (section === \"edu\" && l.startsWith(\"-\")) {\n    education.push(clean(l.replace(/^-/, '')));\n  }\n}\n\n// ---------- RENDER ----------\nfunction renderExp(arr) {\n  return arr.map(item => `\n    <div class=\"item\">\n      <div class=\"title\">${item.role}</div>\n      <div class=\"sub\">${item.company} · ${item.duration}</div>\n      <ul>\n        ${item.bullets.map(b => `<li>${b}</li>`).join('')}\n      </ul>\n    </div>\n  `).join('');\n}\n\nfunction renderProj(arr) {\n  return arr.map(item => `\n    <div class=\"item\">\n      <div class=\"title\">${item.title} | ${item.year}</div>\n      <ul>\n        ${item.bullets.map(b => `<li>${b}</li>`).join('')}\n      </ul>\n    </div>\n  `).join('');\n}\n\nfunction renderList(arr) {\n  return arr.length\n    ? `<ul>${arr.map(i => `<li>${i}</li>`).join('')}</ul>`\n    : '';\n}\n\n// ---------- HTML ----------\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<style>\n  body {\n    font-family: Arial;\n    margin: 26px;\n    font-size: 11px;\n    line-height: 1.5;\n    color: #111;\n    max-width: 800px;\n  }\n\n  h1 {\n    margin: 0;\n    font-size: 17px;\n  }\n\n  .contact {\n    font-size: 10px;\n    margin: 5px 0 10px;\n    color: #444;\n  }\n\n  .section {\n    margin-top: 10px;\n  }\n\n  .section h2 {\n    font-size: 11px;\n    text-transform: uppercase;\n    border-bottom: 1px solid #000;\n    margin-bottom: 4px;\n  }\n\n  .item {\n    margin-bottom: 6px;\n  }\n\n  .title {\n    font-weight: bold;\n    font-size: 10.5px;\n  }\n\n  .sub {\n    font-size: 9.5px;\n    color: #555;\n    margin-bottom: 2px;\n  }\n\n  ul {\n    margin: 2px 0 5px 14px;\n  }\n\n  li {\n    margin-bottom: 2px;\n  }\n</style>\n</head>\n\n<body>\n\n<h1>${name}</h1>\n<div class=\"contact\">${contact.replace(/\\|/g, ' | ')}</div>\n\n<div class=\"section\">\n<h2>Experience</h2>\n${renderExp(experience)}\n</div>\n\n<div class=\"section\">\n<h2>Projects</h2>\n${renderProj(projects)}\n</div>\n\n<div class=\"section\">\n<h2>Skills</h2>\n${renderList(skills)}\n</div>\n\n<div class=\"section\">\n<h2>Education</h2>\n${renderList(education)}\n</div>\n\n</body>\n</html>\n`;\n\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        416
+      ],
+      "id": "5a869ede-3636-4037-8f26-142cfeb4a35a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are helpful, intelligent resume writing assistant that drafts high\nconverting resumes based on jobs.\n\nThis resume will be added to a Google Doc, so write it in markdown format that I\ncan easily copy/paste. Do not output any backtick (no ```). "
+            },
+            {
+              "content": "=#Overview\nI'm looking for jobs. Your task is to customise a provided resume using a\nprovided job description.\n\nHere is the job description:\n{{ $('Scrape Jobs1').item.json.descriptionText }}\n\n\n--\n\nHere is my resume:\n{{ $('Get Resume1').item.json.content }}\n\nRespond with only the customized, updated resume—nothing else and format must be below given-\n\nGenerate resume EXACTLY in the following structured format.\nDo not add extra text. Do not change structure.\n\nNAME: <name>\n\nCONTACT:\nLocation | Phone | Email | LinkedIn | Portfolio\n\nEXPERIENCE:\n- Role: <role>\n  Company: <company>\n  Duration: <duration>\n  Points:\n    - <point>\n    - <point>\n\n- Role: <role>\n  Company: <company>\n  Duration: <duration>\n  Points:\n    - <point>\n\nPROJECTS:\n- Title: <project name>\n  Year: <year>\n  Points:\n    - <point>\n    - <point>\n\nTECHNICAL_SKILLS:\n- AI_ML: <skills>\n- Programming: <skills>\n- Frameworks: <skills>\n- Data: <skills>\n- Databases: <skills>\n- DevOps: <skills>\n\nEDUCATION:\n- Institute: <name>\n  Degree: <degree>\n  Year: <year>\n\nReturn ONLY pure markdown.\n\nDo NOT include:\n- <html>\n- <body>\n- any HTML tags\n\nUse this format:\n\n## MAIN HEADING\n### Subheading\n\n- Bullet point\n\nKeep clean spacing."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        416
+      ],
+      "id": "746c6c9e-1f63-4fd6-9458-550bc57e82bd",
+      "name": "Resume Text generation1",
+      "credentials": {
+        "openAiApi": {
+          "id": "U0NXCRPAi3B1Ichy",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "={{ $json.html }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1696,
+        416
+      ],
+      "id": "13da0855-9778-4537-ae67-38affbec48d6",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Uickzj31AlJgChrM",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "=Jiyanshi{{$('Filter1').item.json.output[0].role}}.pdf",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1872,
+        416
+      ],
+      "id": "16e4eee1-625c-480b-bddd-7060284de18b",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mQbeSA88drBqdDcS",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1tMgT-BHcxl0NlyvingVnk9U4obrp8tn4cyV74mq3z3A",
+          "mode": "list",
+          "cachedResultName": "job tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tMgT-BHcxl0NlyvingVnk9U4obrp8tn4cyV74mq3z3A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tMgT-BHcxl0NlyvingVnk9U4obrp8tn4cyV74mq3z3A/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Title": "={{ $('Scrape Jobs1').item.json.title }}",
+            "linkedin link": "={{ $('Scrape Jobs1').item.json.link }}",
+            "Company name": "={{ $('Scrape Jobs1').item.json.companyName }}",
+            "description": "={{ $('Scrape Jobs1').item.json.descriptionText }}",
+            "employment type": "={{ $('Scrape Jobs1').item.json.employmentType }}",
+            "apply url": "={{ $('Scrape Jobs1').item.json.applyUrl }}",
+            "website link": "={{ $('Scrape Jobs1').item.json.companyWebsite }}",
+            "Resume": "={{ $json.webViewLink }}"
+          },
+          "matchingColumns": [
+            "job "
+          ],
+          "schema": [
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "linkedin link",
+              "displayName": "linkedin link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company name",
+              "displayName": "Company name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "employment type",
+              "displayName": "employment type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "apply url",
+              "displayName": "apply url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website link",
+              "displayName": "website link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Resume",
+              "displayName": "Resume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2048,
+        416
+      ],
+      "id": "cd5bc028-e872-4d3a-9921-9b26eabb0d36",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hEYgH3YBurrXs61w",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        416
+      ],
+      "id": "bf59bcf6-9730-4841-bfe5-246e4d544803",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Job Search URL1": {
+      "main": [
+        [
+          {
+            "node": "Scrape Jobs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Jobs1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Resume1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Resume1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Resume Text generation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resume Text generation1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Job Search URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "676d6ee3-d134-46d7-8a38-c7a9128608c2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e4e217b43f4c243684cd77a11556f52b249a894902df1451f6e5f6ac2b69bbf9"
+  },
+  "id": "Usbh5cDCJge5Qmfq",
+  "tags": []
+}
