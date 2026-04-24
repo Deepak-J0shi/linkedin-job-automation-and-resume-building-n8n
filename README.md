@@ -2,11 +2,15 @@
 
 An end-to-end intelligent job application pipeline that automates job discovery, evaluates job relevance using AI, customizes resumes per role, generates PDFs, and tracks applications — built using n8n, LLMs, and cloud integrations.
 
-N8N Image:
+
+*N8N Image:*
+
 <img width="1193" height="229" alt="image" src="https://github.com/user-attachments/assets/fc4dada8-f752-4fc2-9129-94debdab192e" />
 
 
-Output Results:
+
+*Output Results:*
+
 <img width="1364" height="662" alt="image" src="https://github.com/user-attachments/assets/06f6f9da-f10f-4400-8122-1f8e2017d15d" />
 
 <img width="1366" height="646" alt="image" src="https://github.com/user-attachments/assets/c5a8cc92-c4ed-43be-b28c-91d9d3a30e8c" />
